@@ -4,7 +4,10 @@
 
 # 🤖 DeskMate
 ### AI-Powered IT Helpdesk Assistant
+<<<<<<< HEAD
 #### Black Box Network Services · AI Center of Excellence
+=======
+>>>>>>> d1ba4187e497d079a50ef1dd5171f953f59b55b9
 
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -26,7 +29,11 @@
 
 ## 🎯 What is DeskMate?
 
+<<<<<<< HEAD
 DeskMate is a proof-of-concept AI IT helpdesk assistant built for the Black Box Network Services AI Center of Excellence internship exercise. 
+=======
+DeskMate is a proof-of-concept AI IT helpdesk assistant.  
+>>>>>>> d1ba4187e497d079a50ef1dd5171f953f59b55b9
 
 An employee types a question in natural language. DeskMate:
 1. **Understands** the intent using an LLM
@@ -125,11 +132,20 @@ pip install -r requirements.txt
 ```
 
 ### 4. Configure API key
+<<<<<<< HEAD
 ```bash
 cp .env.example .env
 # Open .env and add your Groq API key:
 # GROQ_API_KEY=your_key_here
 ```
+=======
+Create a `.env` file in the project root:
+```bash
+GROQ_API_KEY="your_groq_key_here"
+```
+Get your free Groq API key from [console.groq.com](https://console.groq.com)
+````
+>>>>>>> d1ba4187e497d079a50ef1dd5171f953f59b55b9
 
 ### 5. Run
 ```bash
@@ -187,9 +203,12 @@ deskmate/
 │   └── index.html       # Chat UI — single file, no build step
 ├── requirements.txt
 ├── .env.example
+<<<<<<< HEAD
 ├── DESIGN_NOTES.md      # Architecture decisions for interview
 ├── PRODUCTION_NOTE.md   # Azure production design (1-2 pages)
 └── sample_transcript.md # End-to-end demo transcripts
+=======
+>>>>>>> d1ba4187e497d079a50ef1dd5171f953f59b55b9
 ```
 
 ---
@@ -219,7 +238,10 @@ Every request is fully traceable:
 
 ## 💡 Design Decisions
 
+<<<<<<< HEAD
 See [`DESIGN_NOTES.md`](DESIGN_NOTES.md) for the full breakdown. Key choices:
+=======
+>>>>>>> d1ba4187e497d079a50ef1dd5171f953f59b55b9
 
 **Why a tool-use loop instead of intent classification?**  
 Multi-step queries like "check my entitlement and raise a ticket if I don't have it" require the model to make a conditional decision based on live data. A classifier can't do this — an agentic loop does it natively.
@@ -234,7 +256,10 @@ Zero setup — clone and run. The data shape maps directly to what real systems 
 
 ## 🏭 Production Design
 
+<<<<<<< HEAD
 See [`PRODUCTION_NOTE.md`](PRODUCTION_NOTE.md) for the full Azure production architecture.
+=======
+>>>>>>> d1ba4187e497d079a50ef1dd5171f953f59b55b9
 
 **TL;DR:** Azure Container Apps + Azure OpenAI + Azure AD (JWT auth) + Cosmos DB + Redis Cache + Azure Monitor.
 
@@ -255,8 +280,16 @@ See [`PRODUCTION_NOTE.md`](PRODUCTION_NOTE.md) for the full Azure production arc
 
 <div align="center">
 
+<<<<<<< HEAD
 Built with ❤️ for the Black Box Network Services AI Center of Excellence
 
 **[FastAPI](https://fastapi.tiangolo.com) · [Groq](https://groq.com) · [LLaMA 3.1](https://llama.meta.com)**
 
 </div>
+=======
+Built with ❤️ for AI
+
+**[FastAPI](https://fastapi.tiangolo.com) · [Groq](https://groq.com) · [LLaMA 3.1](https://llama.meta.com)**
+
+</div>
+>>>>>>> d1ba4187e497d079a50ef1dd5171f953f59b55b9
