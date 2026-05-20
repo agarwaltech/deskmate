@@ -10,27 +10,16 @@ The POC assumes one user, one process, no auth, state in memory. Production mean
 
 ## Architecture
 
-Employees (browser or Teams)
-        │
-        ▼
-Azure API Management  ← auth, rate limiting
-        │
-        ▼
-Azure Container Apps  ← DeskMate FastAPI (scale to zero)
-        │
-   ┌────┴──────────────────┐
-   ▼                       ▼
-Azure Redis Cache      Azure Cosmos DB
-(session history)      (audit log)
-        │
-   ┌────┴──────────────────┐
-   ▼                       ▼
-ServiceNow API        Azure Active Directory
-(real tickets)        (identity + entitlements)
-        │
-   Azure OpenAI (GPT-4o)
-        │
-   Azure Monitor + App Insights
+| Layer | Service | Purpose |
+|---|---|---|
+| Entry | Azure API Management | Auth, rate limiting, routing |
+| Compute | Azure Container Apps | DeskMate FastAPI, scale-to-zero |
+| Session | Azure Redis Cache | Conversation history with TTL |
+| Audit | Azure Cosmos DB | Immutable action log |
+| Tickets | ServiceNow API | Real ticket CRUD |
+| Identity | Azure Active Directory | Employee identity + entitlements |
+| LLM | Azure OpenAI (GPT-4o) | Function calling at scale |
+| Observability | Azure Monitor + App Insights | Tracing, alerting, dashboards |
 
 
 
