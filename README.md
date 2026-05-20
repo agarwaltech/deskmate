@@ -126,7 +126,7 @@ pip install -r requirements.txt
 ### 4. Configure API key
 Create a `.env` file in the project root:
 ```bash
-echo GROQ_API_KEY=your_groq_key_here > .env
+GROQ_API_KEY="your_groq_key_here"
 ```
 Get your free Groq API key from [console.groq.com](https://console.groq.com)
 ````
