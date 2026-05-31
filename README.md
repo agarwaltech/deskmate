@@ -1,238 +1,126 @@
-<div align="center">
+# 🤖 DeskMate — AI-Powered IT Helpdesk Assistant
 
-<img src="https://capsule-render.vercel.app/api?type=waving&color=6366f1&height=200&section=header&text=DeskMate&fontSize=60&fontColor=ffffff&animation=fadeIn&fontAlignY=38&desc=AI-Powered%20IT%20Helpdesk%20Assistant&descAlignY=55&descAlign=50" width="100%"/>
+![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
+![Groq](https://img.shields.io/badge/Groq-LLaMA%203.1-F55036?style=flat-square&logo=groq&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![Groq](https://img.shields.io/badge/Groq-LLaMA%203.1-F55036?style=flat-square&logoColor=white)](https://groq.com)
-[![Status](https://img.shields.io/badge/Status-Working%20POC-brightgreen?style=flat-square)](https://github.com/agarwaltech/deskmate)
-
-**An agentic AI assistant that handles IT helpdesk queries end-to-end —**
-**from entitlement checks to ticket creation — using real LLM-powered reasoning.**
-
-</div>
+An **agentic AI IT-helpdesk assistant**. An employee types a request in natural language; DeskMate uses an LLM tool-calling loop to decide which internal IT systems to query, performs the actions (entitlement checks, ticket creation, password resets), and replies with something actionable — no hardcoded intent classifiers.
 
 ---
 
-## What is DeskMate?
+## ✨ Features
 
-DeskMate is a proof-of-concept AI IT helpdesk assistant .
-
-An employee types a question in natural language. DeskMate:
-1. **Understands** the intent using an LLM
-2. **Decides** which internal IT systems to query
-3. **Acts** — fetches data, creates tickets, resets passwords
-4. **Responds** with something actionable
-
-No rigid intent classifiers. No hardcoded flows. Pure agentic reasoning.
+- **Agentic tool-calling loop** — the LLM decides which tools to call and when, natively handling multi-step conditional requests (e.g. *"request Adobe if I'm not entitled"*).
+- **6 IT tools** — user profile, software-entitlement check, ticket create / status / list, and password reset.
+- **Web chat UI** — single-file frontend with an employee selector and a live agent-trace panel.
+- **Full observability** — every tool call is traced to an in-memory ring buffer and exposed at `GET /trace`.
+- **Scope & privacy guardrails** — a 10-rule system prompt refuses out-of-scope (HR/payroll/general) queries and blocks access to other employees' data.
+- **Resilient** — automatic rate-limit retry with exponential backoff, per-tool error handling, and capped session memory.
 
 ---
 
-## Features
+## 🏗️ Architecture
 
-| Feature | Description |
+```
+Browser (chat UI)  →  FastAPI  →  Agentic Loop (llm.py)  →  Tool Dispatcher (tools.py)  →  Mock IT Systems (mock_data.py)
+                                      │
+                                 Groq API (LLaMA 3.1)
+```
+
+**Agentic loop:** builds messages (system prompt + history + user turn) → calls Groq with the tool schemas → if the model returns `tool_calls`, executes them, appends results, and loops (up to 10 iterations) → returns the final answer when the model stops.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology |
 |---|---|
-| 🧠 **Agentic Loop** | LLM decides what tools to call and when — handles multi-step queries natively |
-| 🔧 **6 IT Tools** | Entitlement checks, ticket creation, ticket lookup, password reset, user profiles, ticket listing |
-| 💬 **Chat Interface** | Clean, real-time web UI with employee selector |
-| 🔍 **Observable Execution** | Every tool call is traced and visible in the UI |
-| 🚫 **Scope Enforcement** | Gracefully refuses out-of-scope queries |
-| ⚡ **Fast Responses** | Powered by Groq LLaMA 3.1 — sub-second inference |
-| 🛡️ **Error Handling** | Handles missing data, invalid inputs, and tool failures |
+| **Backend** | FastAPI + Uvicorn |
+| **LLM** | Groq API — `llama-3.1-8b-instant` (called via `httpx`, OpenAI-compatible endpoint) |
+| **Validation** | Pydantic |
+| **Frontend** | Single-file HTML / CSS / JS chat UI |
+| **State & logs** | In-memory sessions + a `deque` ring-buffer logger |
 
 ---
 
-## Architecture
+## 🔧 Tools Available
 
-```
-Employee (Browser)
-       │
-       ▼
-FastAPI Backend  ──  Session Management + Logging
-       │
-       ▼
-Agentic Loop (llm.py)
-  1. Build messages (system + history + user turn)
-  2. Call Groq API with tool schemas
-  3. If tool_calls → execute → append results → loop
-  4. If finish_reason = stop → return final answer
-       │
-       ▼
-Tool Dispatcher (tools.py)
-  get_user_profile        check_software_entitlement
-  create_ticket           get_ticket_status
-  list_user_tickets       reset_password
-       │
-       ▼
-Mock IT Systems (mock_data.py)
-  User Directory    Software Catalog    Ticket Store
-```
+| Tool | Description |
+|---|---|
+| `get_user_profile` | Fetch employee name, department, role, email, and current entitlements |
+| `check_software_entitlement` | Check access to a specific app + approval requirement and license count |
+| `create_ticket` | Open an IT ticket with title, priority, description, and category |
+| `get_ticket_status` | Look up status, assignment, and resolution of a ticket |
+| `list_user_tickets` | List all tickets raised by an employee |
+| `reset_password` | Reset a password and issue a temporary credential |
 
 ---
 
-## Setup
+## 🌐 API Endpoints
 
-### Prerequisites
-- Python 3.11+
-- Free Groq API key from [console.groq.com](https://console.groq.com)
+| Method | Route | Purpose |
+|---|---|---|
+| `GET` | `/` | Serve the chat UI |
+| `POST` | `/chat` | Send a message; returns the agent's response + execution trace |
+| `GET` | `/trace` | Full structured log of recent activity |
+| `GET` | `/employees` | List demo employees (populates the UI selector) |
+| `DELETE` | `/session/{session_id}` | Clear a session's conversation history |
+| `GET` | `/health` | Health check |
 
-### 1. Clone the repository
+---
+
+## 🚀 Setup
+
+**Prerequisites:** Python 3.11+ and a free Groq API key from [console.groq.com](https://console.groq.com).
+
 ```bash
-git clone https://github.com/agarwaltech/deskmate.git
-cd deskmate
-```
-
-### 2. Create virtual environment
-```bash
+# 1. Create & activate a virtual environment
 python -m venv venv
+venv\Scripts\activate          # Windows
+source venv/bin/activate       # macOS / Linux
 
-# Windows
-venv\Scripts\activate
-
-# macOS / Linux
-source venv/bin/activate
-```
-
-### 3. Install dependencies
-```bash
+# 2. Install dependencies
 pip install -r requirements.txt
-```
 
-### 4. Configure API key
+# 3. Add your API key to a .env file in the project root
+echo GROQ_API_KEY=your_key_here > .env
 
-Create a `.env` file in the project root:
-```
-GROQ_API_KEY="your_groq_key_here"
-```
-Get your free key from [console.groq.com](https://console.groq.com)
-
-### 5. Run
-```bash
+# 4. Run
 python main.py
 ```
 
 Open **http://localhost:8000** in your browser.
 
----
-
-## Demo
-
-### Multi-step conditional request
-```
-Employee: I need access to Adobe Creative Suite —
-          if I'm not entitled, raise a high-priority ticket
-
-DeskMate: → check_software_entitlement(EMP001, "Adobe Creative Suite")
-          → Not entitled. Licenses available: 5
-          → create_ticket(EMP001, priority="high")
-
-          "You're not currently entitled to Adobe Creative Suite.
-           Ticket TKT-1001 raised (high priority). Response in 2 hours."
-```
-
-### Password reset
-```
-Employee: I can't log into my account, reset my password
-
-DeskMate: → reset_password(EMP001)
-
-          "Done! Temporary password sent to alice.johnson@blackbox.com.
-           Change it on first login."
-```
-
-### Out-of-scope refusal
-```
-Employee: Can you help me negotiate my salary raise?
-
-DeskMate: "That's outside what I can help with — salary discussions
-           are handled by your HR Business Partner."
-```
+> **Dependencies:** `fastapi`, `uvicorn[standard]`, `httpx`, `python-dotenv`, `pydantic`.
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 deskmate/
-├── main.py              # FastAPI app — routes, session management
-├── llm.py               # Agentic loop — Groq API + tool-use
-├── tools.py             # 6 tool implementations + JSON schemas
-├── mock_data.py         # In-memory mock IT systems
-├── logger.py            # Structured logging + ring buffer
+├── main.py            # FastAPI app — routes, session management
+├── llm.py             # Agentic loop — Groq API call + tool execution
+├── tools.py           # 6 tool implementations + JSON schemas + dispatcher
+├── mock_data.py       # In-memory users, software catalog, seed tickets
+├── logger.py          # In-memory ring-buffer logger (exposed at /trace)
 ├── static/
-│   └── index.html       # Chat UI — single file, no build step
+│   └── index.html     # Single-file chat UI
 ├── requirements.txt
-├── DESIGN_NOTES.md      # Architecture decisions
-├── PRODUCTION_NOTE.md   # Azure production design
-└── sample_transcript.md # End-to-end demo transcripts
+└── .env               # GROQ_API_KEY (not committed)
 ```
 
 ---
 
-## Tools Available
+## 💡 Design Notes
 
-| Tool | Description |
-|---|---|
-| `get_user_profile` | Fetch employee name, department, role, entitlements |
-| `check_software_entitlement` | Check if employee has access to specific software |
-| `create_ticket` | Open a new IT support ticket with priority and category |
-| `get_ticket_status` | Look up status and resolution of any ticket |
-| `list_user_tickets` | List all tickets raised by an employee |
-| `reset_password` | Reset employee password and issue temporary credential |
+- **Why a tool-calling loop, not intent classification?** Conditional multi-step queries (*"check entitlement, then raise a ticket if I'm not entitled"*) require a decision based on live data — an agentic loop does this natively; a classifier can't.
+- **Why Groq + LLaMA 3.1?** Free tier, function-calling support, and sub-second latency. The design is model-agnostic — swapping to another provider is a small change in `llm.py`.
+- **Why in-memory mock data?** Zero setup — clone and run. The data shapes mirror what real systems (ServiceNow, Okta, AD) would return.
 
 ---
 
-## Observability
+## 📄 License
 
-Every request is fully traceable:
-
-- **Terminal** — all tool calls and iterations logged to stdout
-- **UI Trace Panel** — click Trace to see the agent's step-by-step reasoning
-- **`GET /trace`** — full structured JSON log of all activity
-
----
-
-## Design Decisions
-
-See [DESIGN_NOTES.md](DESIGN_NOTES.md) for the full breakdown.
-
-**Why a tool-use loop instead of intent classification?**
-Multi-step queries require conditional decisions based on live data. A classifier can't do this — an agentic loop does it natively.
-
-**Why Groq LLaMA 3.1?**
-Free tier, function calling support, sub-second latency. Model is swappable in one line.
-
-**Why in-memory mock data?**
-Zero setup — clone and run. Data shapes map directly to real systems (ServiceNow, Okta, AD).
-
----
-
-## Production Design
-
-See [PRODUCTION_NOTE.md](PRODUCTION_NOTE.md) for the Azure production architecture.
-
-**TL;DR:** Azure Container Apps + Azure OpenAI + Azure AD + Cosmos DB + Redis + Azure Monitor.
-
----
-
-## Sample Queries
-
-| Query | What happens |
-|---|---|
-| `I need Adobe Creative Suite access` | Checks entitlement → raises ticket if not entitled |
-| `Reset my password` | Issues temporary credential via email |
-| `What's the status of TKT-0990?` | Fetches ticket status and resolution |
-| `Show me all my tickets` | Lists all tickets for current employee |
-| `Do I have GitHub access?` | Checks entitlement → yes/no with details |
-| `Help me with my taxes` | Graceful out-of-scope refusal |
-
----
-
-<div align="center">
-
-
-**[FastAPI](https://fastapi.tiangolo.com) · [Groq](https://groq.com) · [LLaMA 3.1](https://llama.meta.com)**
-
-<img src="https://capsule-render.vercel.app/api?type=waving&color=6366f1&height=100&section=footer" width="100%"/>
-
-</div>
+MIT
